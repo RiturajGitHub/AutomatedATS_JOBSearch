@@ -28,6 +28,8 @@ const SOFT_SKILLS = [
   'leadership', 'communication', 'teamwork', 'collaboration', 'problem-solving', 'analytical',
   'critical thinking', 'adaptability', 'time management', 'creativity', 'innovation', 'strategic',
   'mentoring', 'coaching', 'negotiation', 'presentation', 'stakeholder', 'cross-functional',
+  'agile', 'scrum', 'code review', 'pair programming', 'ownership', 'initiative',
+  'self-motivated', 'detail-oriented', 'results-driven', 'fast learner', 'multitasking',
 ];
 
 // Primary skill categories for profile extraction
@@ -64,13 +66,13 @@ const DOMAIN_KEYWORDS: Record<string, string[]> = {
 
 const SECTION_KEYWORDS = {
   contact: ['email', 'phone', 'linkedin', 'github', 'address', 'mobile', 'contact', '@', 'tel:', 'website', 'portfolio'],
-  summary: ['summary', 'objective', 'profile', 'about', 'overview', 'professional summary', 'career objective'],
-  experience: ['experience', 'employment', 'work history', 'professional experience', 'career', 'positions', 'internship', 'intern'],
-  education: ['education', 'degree', 'university', 'college', 'bachelor', 'master', 'phd', 'b.tech', 'm.tech', 'b.e', 'm.e', 'bsc', 'msc', 'bca', 'mca', 'certification', 'diploma'],
-  skills: ['skills', 'technologies', 'technical skills', 'competencies', 'expertise', 'proficiencies', 'tools', 'programming'],
-  projects: ['projects', 'portfolio', 'works', 'contributions', 'github', 'case studies'],
+  summary: ['summary', 'objective', 'profile', 'about', 'overview', 'professional summary', 'career objective', 'professional profile', 'career summary'],
+  experience: ['experience', 'employment', 'work history', 'professional experience', 'career', 'positions', 'internship', 'intern', 'work experience'],
+  education: ['education', 'degree', 'university', 'college', 'bachelor', 'master', 'phd', 'b.tech', 'm.tech', 'b.e', 'm.e', 'bsc', 'msc', 'bca', 'mca', 'certification', 'diploma', 'academic'],
+  skills: ['skills', 'technologies', 'technical skills', 'competencies', 'expertise', 'proficiencies', 'tools', 'programming', 'technical competencies'],
+  projects: ['projects', 'portfolio', 'works', 'contributions', 'github', 'case studies', 'personal projects'],
   achievements: ['achievements', 'awards', 'honors', 'recognition', 'accomplishments', 'publications'],
-  certifications: ['certification', 'certified', 'certificate', 'license', 'accreditation'],
+  certifications: ['certification', 'certified', 'certificate', 'license', 'accreditation', 'certifications'],
 };
 
 const ACTION_VERBS = [
@@ -78,6 +80,7 @@ const ACTION_VERBS = [
   'increased', 'decreased', 'reduced', 'achieved', 'delivered', 'launched', 'optimized',
   'collaborated', 'coordinated', 'analyzed', 'architected', 'engineered', 'deployed', 'automated',
   'mentored', 'trained', 'spearheaded', 'streamlined', 'enhanced', 'integrated', 'established',
+  'migrated', 'drove', 'leveraged', 'executed', 'facilitated', 'transformed', 'pioneered',
 ];
 
 const QUANTIFIERS = ['%', '$', '₹', 'million', 'billion', 'thousand', 'users', 'customers', 'team',
@@ -103,21 +106,49 @@ function containsKeyword(text: string, keyword: string): boolean {
 
 function detectSection(text: string, sectionKeywords: string[]): boolean {
   const lines = text.toLowerCase().split('\n');
-  return lines.some(line =>
-    sectionKeywords.some(kw => {
-      const trimmed = line.trim();
-      return trimmed === kw || trimmed.startsWith(kw + ':') || trimmed.startsWith(kw + ' ') ||
-        (trimmed.includes(kw) && trimmed.length < kw.length + 20);
-    })
-  );
+  
+  // Check line-by-line first (normal case)
+  const foundInLines = lines.some(line => {
+    const trimmed = line.trim();
+    return sectionKeywords.some(kw => {
+      const lowerKw = kw.toLowerCase();
+      return trimmed === lowerKw || 
+             trimmed.startsWith(lowerKw + ':') || 
+             trimmed.startsWith(lowerKw + ' ') ||
+             trimmed.startsWith(lowerKw + '-') ||
+             (trimmed.includes(lowerKw) && trimmed.length < lowerKw.length + 30) ||
+             new RegExp(`^[\\s\\-•*]*${lowerKw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s:\\-]*$`, 'i').test(trimmed);
+    });
+  });
+  
+  if (foundInLines) return true;
+  
+  // Fallback: Check if keyword appears in text with word boundaries (for PDFs with no line breaks)
+  const lowerText = text.toLowerCase();
+  return sectionKeywords.some(kw => {
+    const lowerKw = kw.toLowerCase();
+    // Match keyword with word boundaries or common separators
+    const pattern = new RegExp(`\\b${lowerKw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    return pattern.test(lowerText);
+  });
 }
 
 function extractEmailPhoneLinkedIn(text: string) {
   const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-  const phoneMatch = text.match(/[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}/);
+  
+  // Enhanced phone regex to handle multiple formats
+  const phonePatterns = [
+    /\+91[-\s]?[6-9]\d{9}/,  // Indian format: +91-9876543210 or +91 9876543210
+    /\+\d{1,3}[-\s]?\(?\d{3}\)?[-\s]?\d{3}[-\s]?\d{4,6}/, // International: +1-234-567-8900
+    /[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}/, // Standard: (123) 456-7890
+    /[6-9]\d{9}/, // Indian without country code: 9876543210
+  ];
+  
+  const phoneMatch = phonePatterns.some(pattern => pattern.test(text));
+  
   const linkedinMatch = text.toLowerCase().includes('linkedin');
   const githubMatch = text.toLowerCase().includes('github');
-  return { email: !!emailMatch, phone: !!phoneMatch, linkedin: linkedinMatch, github: githubMatch };
+  return { email: !!emailMatch, phone: phoneMatch, linkedin: linkedinMatch, github: githubMatch };
 }
 
 function extractExperienceYears(text: string): number {
@@ -165,16 +196,33 @@ function detectJobTitle(text: string): string {
 
 function inferCareerLevel(text: string, yoe: number): CareerLevel {
   const lower = text.toLowerCase();
+  
+  // Check explicit titles first (most reliable)
   if (lower.includes('principal') || lower.includes('distinguished')) return 'principal';
   if (lower.includes('staff engineer') || lower.includes('staff software')) return 'staff';
   if (lower.includes('engineering manager') || lower.includes('tech lead') || lower.includes('technical lead')) return 'lead';
-  if (lower.includes('senior') || lower.includes('sr.')) return 'senior';
-  if (lower.includes('junior') || lower.includes('jr.')) return 'junior';
+  
+  // Check for SDE levels (common in tech companies)
+  if (lower.includes('sde 3') || lower.includes('sde-3') || lower.includes('sde3')) return 'senior';
+  if (lower.includes('sde 2') || lower.includes('sde-2') || lower.includes('sde2')) return 'mid';
+  if (lower.includes('sde 1') || lower.includes('sde-1') || lower.includes('sde1')) return 'junior';
+  
+  // Check for MTS levels (Member of Technical Staff)
+  if (lower.includes('mts 3') || lower.includes('mts-3') || lower.includes('mts3')) return 'senior';
+  if (lower.includes('mts 2') || lower.includes('mts-2') || lower.includes('mts2')) return 'mid';
+  if (lower.includes('mts 1') || lower.includes('mts-1') || lower.includes('mts1')) return 'junior';
+  
+  // Check for senior/junior keywords
+  if (lower.includes('senior') || lower.includes('sr.') || lower.includes('sr ')) return 'senior';
+  if (lower.includes('junior') || lower.includes('jr.') || lower.includes('jr ')) return 'junior';
   if (lower.includes('intern')) return 'intern';
+  
+  // Executive levels
   if (lower.includes('vp ') || lower.includes('vice president')) return 'vp';
   if (lower.includes('director')) return 'director';
   if (lower.includes('cto') || lower.includes('ceo') || lower.includes('chief')) return 'c-level';
-  // Infer from YoE
+  
+  // Infer from YoE (fallback)
   if (yoe <= 0) return 'intern';
   if (yoe <= 2) return 'junior';
   if (yoe <= 5) return 'mid';
@@ -418,7 +466,16 @@ function countActionVerbs(text: string): number {
 }
 
 function countQuantifiedAchievements(text: string): number {
-  return QUANTIFIERS.filter(q => text.includes(q)).length;
+  const lines = text.split('\n');
+  let count = 0;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // Check if line has a number AND at least one quantifier
+    if (/\d+/.test(trimmed) && QUANTIFIERS.some(q => trimmed.toLowerCase().includes(q.toLowerCase()))) {
+      count++;
+    }
+  }
+  return count;
 }
 
 function checkFormattingIssues(text: string): string[] {
@@ -468,6 +525,7 @@ export function analyzeResume(resumeText: string): ATSResult {
 
   // 2. Professional Summary (10 points)
   const hasSummary = detectSection(text, SECTION_KEYWORDS.summary);
+  
   const summaryLength = hasSummary ? 7 : 0;
   const hasKeywordsInSummary = hasSummary
     ? (TECH_SKILLS.filter(s => containsKeyword(text.substring(0, 500), s)).length > 2 ? 3 : 1)
@@ -528,18 +586,28 @@ export function analyzeResume(resumeText: string): ATSResult {
   const hasEducation = detectSection(text, SECTION_KEYWORDS.education);
   const hasDegree = ['bachelor', 'master', 'phd', 'b.tech', 'm.tech', 'b.e', 'bsc', 'msc', 'degree'].some(d => containsKeyword(text, d));
   const hasCertification = detectSection(text, SECTION_KEYWORDS.certifications);
+  
+  // Check for strong educational credentials (high GPA + reputed institution)
+  const hasHighGPA = /(?:cgpa|gpa|percentage)\s*[:\-]?\s*(?:[8-9]\.[0-9]|[8-9][0-9]%|3\.[5-9]|4\.0)/i.test(text);
+  const hasReputedInstitution = /(?:iit|nit|iiit|bits|iim|iem|vit|manipal|srm|amity|delhi university|mumbai university|bangalore university|anna university|jadavpur)/i.test(text);
+  const hasStrongCredentials = hasHighGPA && hasReputedInstitution;
+  
+  // Award partial credit for strong credentials if no certifications
+  const certScore = hasCertification ? 3 : (hasStrongCredentials ? 1.5 : 0);
 
-  const eduScore = (hasEducation ? 8 : 0) + (hasDegree ? 4 : 0) + (hasCertification ? 3 : 0);
+  const eduScore = (hasEducation ? 8 : 0) + (hasDegree ? 4 : 0) + certScore;
 
   const educationSection: ATSSection = {
     name: 'Education & Certifications',
-    score: Math.min(eduScore, 15),
+    score: Math.min(Math.round(eduScore), 15),
     maxScore: 15,
     present: hasEducation,
     feedback: [
       hasEducation ? '✅ Education section found' : '❌ No education section detected',
       hasDegree ? '✅ Degree qualification mentioned' : '⚠️ No specific degree mentioned',
-      hasCertification ? '✅ Certifications mentioned' : '⚠️ No certifications listed',
+      hasCertification ? '✅ Certifications mentioned' : 
+        (hasStrongCredentials ? '⚠️ No certifications listed (partial credit given for strong academic credentials)' : 
+        '⚠️ No certifications listed'),
     ],
     improvements: [
       ...(!hasEducation ? ['Add an Education section with degree, institution, and graduation year'] : []),
@@ -551,11 +619,24 @@ export function analyzeResume(resumeText: string): ATSResult {
   const hasSkills = detectSection(text, SECTION_KEYWORDS.skills);
   const foundTechSkills = TECH_SKILLS.filter(s => containsKeyword(text, s));
   const foundSoftSkills = SOFT_SKILLS.filter(s => containsKeyword(text, s));
+  
+  // Detect implied soft skills from common tech phrases
+  const impliedSoftSkills = new Set<string>();
+  const lowerText = text.toLowerCase();
+  
+  if (/\b(?:led|managed|mentored)\s+(?:team|engineers|developers)/i.test(text)) impliedSoftSkills.add('leadership');
+  if (/\b(?:collaborated|worked with|partnered with|cross-team)/i.test(text)) impliedSoftSkills.add('collaboration');
+  if (/\b(?:presented|communicated|documented|stakeholder)/i.test(text)) impliedSoftSkills.add('communication');
+  if (/\b(?:optimized|improved|solved|debugged|troubleshot)/i.test(text)) impliedSoftSkills.add('problem-solving');
+  if (/\b(?:analyzed|evaluated|assessed|investigated)/i.test(text)) impliedSoftSkills.add('analytical');
+  if (/\b(?:designed|architected|created|innovated)/i.test(text)) impliedSoftSkills.add('innovation');
+  
+  const totalSoftSkills = foundSoftSkills.length + impliedSoftSkills.size;
 
   let skillScore = 0;
   if (hasSkills) skillScore += 8;
   skillScore += Math.min(foundTechSkills.length * 0.8, 8);
-  skillScore += Math.min(foundSoftSkills.length * 0.4, 4);
+  skillScore += Math.min(totalSoftSkills * 0.4, 4);
 
   const skillsSection: ATSSection = {
     name: 'Skills & Technologies',
@@ -566,26 +647,42 @@ export function analyzeResume(resumeText: string): ATSResult {
     feedback: [
       hasSkills ? '✅ Dedicated skills section found' : '❌ No skills section detected',
       `${foundTechSkills.length > 8 ? '✅' : '⚠️'} ${foundTechSkills.length} technical skills found`,
-      `${foundSoftSkills.length > 3 ? '✅' : '⚠️'} ${foundSoftSkills.length} soft skills mentioned`,
+      `${totalSoftSkills > 3 ? '✅' : '⚠️'} ${totalSoftSkills} soft skills mentioned`,
     ],
     improvements: [
       ...(!hasSkills ? ['Create a dedicated Skills section with categorized technical and soft skills'] : []),
       ...(foundTechSkills.length < 10 ? ['Add more relevant technical skills (aim for 15-25 skills relevant to your target role)'] : []),
-      ...(foundSoftSkills.length < 3 ? ['Include soft skills: Leadership, Communication, Problem-solving, etc.'] : []),
+      ...(totalSoftSkills < 3 ? ['Include soft skills: Leadership, Communication, Problem-solving, etc.'] : []),
     ],
   };
 
   // 6. Projects (10 points)
   const hasProjects = detectSection(text, SECTION_KEYWORDS.projects);
   const hasGithub = containsKeyword(text, 'github');
+  const hasGithubUrl = /github\.com\/[a-zA-Z0-9_-]+/i.test(text);
+  
+  // Give partial credit if GitHub profile exists with substantial experience bullets
+  const experienceBullets = text.split('\n').filter(line => /^\s*[•\-\*]/.test(line)).length;
+  const hasSubstantialExperience = experienceBullets >= 8;
+  
+  let projectScore = 0;
+  if (hasProjects) {
+    projectScore = 8;
+  } else if (hasGithubUrl && hasSubstantialExperience) {
+    // Partial credit: GitHub profile + strong experience can substitute for projects section
+    projectScore = 4;
+  }
+  projectScore += (hasGithub ? 2 : 0);
 
   const projectsSection: ATSSection = {
     name: 'Projects & Portfolio',
-    score: Math.min((hasProjects ? 8 : 0) + (hasGithub ? 2 : 0), 10),
+    score: Math.min(projectScore, 10),
     maxScore: 10,
-    present: hasProjects,
+    present: hasProjects || (hasGithubUrl && hasSubstantialExperience),
     feedback: [
-      hasProjects ? '✅ Projects section found' : '⚠️ No projects section (highly recommended)',
+      hasProjects ? '✅ Projects section found' : 
+        (hasGithubUrl && hasSubstantialExperience ? '⚠️ GitHub profile found with strong experience (partial credit given, but dedicated projects section recommended)' : 
+        '⚠️ No projects section (highly recommended)'),
       hasGithub ? '✅ GitHub link referenced' : '⚠️ No GitHub link for project verification',
     ],
     improvements: [

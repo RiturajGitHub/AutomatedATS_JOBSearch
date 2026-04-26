@@ -11,12 +11,42 @@ interface ATSAnalysisProps {
   fileName: string;
   onBack: () => void;
   onGoToJobs: () => void;
+  onSkillsUpdate?: (selectedSkills: string[]) => void;
 }
 
 // ─── Candidate Profile Panel ──────────────────────────────────────────────────
 
-const CandidateProfilePanel: React.FC<{ profile: CandidateProfile }> = ({ profile }) => {
+const CandidateProfilePanel: React.FC<{ 
+  profile: CandidateProfile;
+  onSkillsUpdate?: (selectedSkills: string[]) => void;
+}> = ({ profile, onSkillsUpdate }) => {
   const [open, setOpen] = useState(false);
+  const [selectedSkills, setSelectedSkills] = useState<Set<string>>(
+    new Set([...profile.primarySkills, ...profile.secondarySkills, ...profile.toolsAndInfra])
+  );
+
+  const toggleSkill = (skill: string) => {
+    const newSelected = new Set(selectedSkills);
+    if (newSelected.has(skill)) {
+      newSelected.delete(skill);
+    } else {
+      newSelected.add(skill);
+    }
+    setSelectedSkills(newSelected);
+    onSkillsUpdate?.(Array.from(newSelected));
+  };
+
+  const selectAll = () => {
+    const allSkills = [...profile.primarySkills, ...profile.secondarySkills, ...profile.toolsAndInfra];
+    setSelectedSkills(new Set(allSkills));
+    onSkillsUpdate?.(allSkills);
+  };
+
+  const deselectAll = () => {
+    setSelectedSkills(new Set());
+    onSkillsUpdate?.([]);
+  };
+
   return (
     <div className="bg-gray-800/60 border border-violet-500/20 rounded-2xl mb-6 overflow-hidden">
       <button
@@ -41,6 +71,32 @@ const CandidateProfilePanel: React.FC<{ profile: CandidateProfile }> = ({ profil
 
       {open && (
         <div className="px-4 pb-4 border-t border-gray-700 pt-4 space-y-4">
+          {/* Skill Selection Controls */}
+          <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl p-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm text-violet-300 font-semibold">
+                🎯 Select Skills for Job Search ({selectedSkills.size} selected)
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={selectAll}
+                  className="text-xs bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 px-2 py-1 rounded transition-colors"
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={deselectAll}
+                  className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-violet-300/70">
+              Click skills below to include/exclude them from job matching. Selected skills will be used to find relevant jobs.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Primary Skills */}
             <div>
@@ -50,7 +106,17 @@ const CandidateProfilePanel: React.FC<{ profile: CandidateProfile }> = ({ profil
               <div className="flex flex-wrap gap-1">
                 {profile.primarySkills.length > 0
                   ? profile.primarySkills.map((s, i) => (
-                      <span key={i} className="text-xs bg-violet-500/20 text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded-full">{s}</span>
+                      <button
+                        key={i}
+                        onClick={() => toggleSkill(s)}
+                        className={`text-xs px-2 py-0.5 rounded-full transition-all cursor-pointer ${
+                          selectedSkills.has(s)
+                            ? 'bg-violet-500/30 text-violet-200 border-2 border-violet-400'
+                            : 'bg-gray-700 text-gray-400 border border-gray-600 opacity-50'
+                        }`}
+                      >
+                        {selectedSkills.has(s) ? '✓ ' : ''}{s}
+                      </button>
                     ))
                   : <span className="text-xs text-gray-600">None detected</span>
                 }
@@ -63,8 +129,18 @@ const CandidateProfilePanel: React.FC<{ profile: CandidateProfile }> = ({ profil
                 <Star className="w-3 h-3 text-blue-400" /> Secondary Skills
               </p>
               <div className="flex flex-wrap gap-1">
-                {profile.secondarySkills.slice(0, 8).map((s, i) => (
-                  <span key={i} className="text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full">{s}</span>
+                {profile.secondarySkills.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => toggleSkill(s)}
+                    className={`text-xs px-2 py-0.5 rounded-full transition-all cursor-pointer ${
+                      selectedSkills.has(s)
+                        ? 'bg-blue-500/30 text-blue-200 border-2 border-blue-400'
+                        : 'bg-gray-700 text-gray-400 border border-gray-600 opacity-50'
+                    }`}
+                  >
+                    {selectedSkills.has(s) ? '✓ ' : ''}{s}
+                  </button>
                 ))}
                 {profile.secondarySkills.length === 0 && <span className="text-xs text-gray-600">None detected</span>}
               </div>
@@ -76,8 +152,18 @@ const CandidateProfilePanel: React.FC<{ profile: CandidateProfile }> = ({ profil
                 <Target className="w-3 h-3 text-green-400" /> Tools & Infrastructure
               </p>
               <div className="flex flex-wrap gap-1">
-                {profile.toolsAndInfra.slice(0, 6).map((t, i) => (
-                  <span key={i} className="text-xs bg-green-500/20 text-green-300 border border-green-500/30 px-2 py-0.5 rounded-full">{t}</span>
+                {profile.toolsAndInfra.map((t, i) => (
+                  <button
+                    key={i}
+                    onClick={() => toggleSkill(t)}
+                    className={`text-xs px-2 py-0.5 rounded-full transition-all cursor-pointer ${
+                      selectedSkills.has(t)
+                        ? 'bg-green-500/30 text-green-200 border-2 border-green-400'
+                        : 'bg-gray-700 text-gray-400 border border-gray-600 opacity-50'
+                    }`}
+                  >
+                    {selectedSkills.has(t) ? '✓ ' : ''}{t}
+                  </button>
                 ))}
                 {profile.toolsAndInfra.length === 0 && <span className="text-xs text-gray-600">None detected</span>}
               </div>
@@ -375,7 +461,7 @@ const RecommendationCard: React.FC<{ rec: Recommendation; index: number }> = ({ 
   );
 };
 
-export const ATSAnalysis: React.FC<ATSAnalysisProps> = ({ result, fileName, onBack, onGoToJobs }) => {
+export const ATSAnalysis: React.FC<ATSAnalysisProps> = ({ result, fileName, onBack, onGoToJobs, onSkillsUpdate }) => {
   const getGradeInfo = (score: number) => {
     if (score >= 90) return { label: 'Excellent', desc: 'Your resume is highly ATS-optimized!', color: 'text-green-400' };
     if (score >= 80) return { label: 'Good', desc: 'Minor improvements can push you to 90+', color: 'text-blue-400' };
@@ -418,7 +504,7 @@ export const ATSAnalysis: React.FC<ATSAnalysisProps> = ({ result, fileName, onBa
         </div>
 
         {/* Candidate Profile Panel */}
-        <CandidateProfilePanel profile={result.candidateProfile} />
+        <CandidateProfilePanel profile={result.candidateProfile} onSkillsUpdate={onSkillsUpdate} />
 
         {/* Score Hero */}
         <div className="bg-gray-800/60 border border-gray-700 rounded-2xl p-6 mb-6">

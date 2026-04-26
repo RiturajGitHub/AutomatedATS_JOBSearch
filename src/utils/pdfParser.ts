@@ -25,12 +25,37 @@ export async function extractTextFromPDF(file: File): Promise<string> {
       const textContent = await page.getTextContent();
       
       const items = textContent.items as any[];
-      const pageText = items
-        .filter((item: any) => item.str && item.str.trim())
-        .map((item: any) => item.str)
-        .join(' ');
       
-      fullText += pageText + '\n';
+      // Preserve line breaks by tracking Y positions
+      let lastY = -1;
+      const pageLines: string[] = [];
+      let currentLine = '';
+      
+      for (const item of items) {
+        if (!item.str || !item.str.trim()) continue;
+        
+        const currentY = item.transform[5]; // Y position
+        
+        // New line if Y position changed significantly (more than 2 units)
+        if (lastY !== -1 && Math.abs(currentY - lastY) > 2) {
+          if (currentLine.trim()) {
+            pageLines.push(currentLine.trim());
+          }
+          currentLine = item.str;
+        } else {
+          // Same line - add space if needed
+          currentLine += (currentLine && !currentLine.endsWith(' ') ? ' ' : '') + item.str;
+        }
+        
+        lastY = currentY;
+      }
+      
+      // Add last line
+      if (currentLine.trim()) {
+        pageLines.push(currentLine.trim());
+      }
+      
+      fullText += pageLines.join('\n') + '\n\n';
     }
 
     await pdf.destroy();
