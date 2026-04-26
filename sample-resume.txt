@@ -1,0 +1,84 @@
+JOHN DOE
+Email: john.doe@email.com | Phone: +91-9876543210
+LinkedIn: linkedin.com/in/johndoe | GitHub: github.com/johndoe
+
+PROFESSIONAL SUMMARY
+Results-driven Full Stack Software Engineer with 5+ years of experience building scalable web applications using React, Node.js, and AWS. Proven track record of delivering 40%+ performance improvements and leading cross-functional teams of 8+ engineers. Specialized in microservices architecture and cloud-native solutions.
+
+WORK EXPERIENCE
+
+Senior Software Engineer | Google India | Bangalore | Jan 2022 - Present
+• Led development of microservices architecture serving 1M+ users, reducing API response time by 45% through caching implementation
+• Architected and implemented React-based enterprise dashboard used by 500+ clients, achieving 99.9% uptime
+• Mentored team of 4 junior engineers, improving code quality by 60% through comprehensive PR reviews and pair programming
+• Automated CI/CD pipeline using Jenkins and Docker, reducing deployment time from 2 hours to 15 minutes
+• Implemented GraphQL API layer, reducing network calls by 70% and improving mobile app performance by 35%
+• Collaborated with Product team to define technical requirements for 5 major features shipped in Q1 2024
+
+Software Engineer | Amazon Web Services | Hyderabad | Jun 2019 - Dec 2021
+• Developed RESTful APIs handling 100K+ daily requests with 99.9% uptime using Node.js and Express
+• Optimized MySQL database queries, improving query performance by 35% and reducing server costs by $15K/month
+• Implemented Redis caching layer, reducing database load by 50% and improving response time from 800ms to 280ms
+• Built real-time notification system using WebSockets, supporting 50K+ concurrent connections
+• Led migration from monolithic architecture to microservices, improving deployment frequency by 300%
+• Received "Outstanding Performance" award for delivering critical features 2 weeks ahead of schedule
+
+Software Development Intern | Flipkart | Bangalore | Jan 2019 - May 2019
+• Developed automated testing suite using Jest and Selenium, reducing manual testing time by 60%
+• Fixed 25+ critical bugs in payment processing module, improving transaction success rate from 92% to 97%
+• Contributed to A/B testing framework used by 10+ engineering teams
+
+EDUCATION
+
+Bachelor of Technology in Computer Science Engineering
+Indian Institute of Technology (IIT), Delhi | 2015 - 2019
+CGPA: 8.5/10 | Relevant Coursework: Data Structures, Algorithms, Database Systems, Operating Systems
+
+TECHNICAL SKILLS
+
+Languages: JavaScript, TypeScript, Python, Java, SQL, HTML, CSS, Bash
+Frontend: React, Next.js, Vue.js, Redux, Tailwind CSS, Material-UI, Bootstrap
+Backend: Node.js, Express, Django, Flask, Spring Boot, FastAPI
+Databases: PostgreSQL, MySQL, MongoDB, Redis, Elasticsearch
+Cloud & DevOps: AWS (EC2, S3, Lambda, RDS, CloudFront), Docker, Kubernetes, Terraform, Jenkins, GitHub Actions
+Tools: Git, Postman, Jira, Confluence, Figma, VS Code
+Methodologies: Agile, Scrum, Test-Driven Development, CI/CD
+
+PROJECTS
+
+E-Commerce Platform | React, Node.js, MongoDB, Stripe | github.com/johndoe/ecommerce
+• Built full-stack e-commerce application with 2000+ active users processing $10K/month in transactions
+• Implemented secure payment integration using Stripe API with PCI compliance
+• Developed admin dashboard for inventory management and order tracking
+• Achieved 4.8/5 star rating from users with 95% customer satisfaction rate
+
+Real-Time Chat Application | React, Socket.io, Redis, AWS | github.com/johndoe/chatapp
+• Created real-time messaging platform supporting 1000+ concurrent users with sub-100ms latency
+• Implemented end-to-end encryption for secure messaging
+• Built presence indicators and typing notifications using WebSockets
+• Deployed on AWS using EC2 and CloudFront for global CDN distribution
+
+AI Resume Analyzer | Python, NLP, Flask, React | github.com/johndoe/resume-analyzer
+• Developed machine learning model to analyze resumes and provide ATS score with 87% accuracy
+• Processed 500+ resumes in beta testing with 92% user satisfaction
+• Implemented keyword extraction using spaCy and scikit-learn
+
+CERTIFICATIONS
+
+• AWS Certified Solutions Architect - Associate | Amazon Web Services | 2023
+• Google Professional Cloud Architect | Google Cloud | 2023
+• Certified Kubernetes Administrator (CKA) | CNCF | 2022
+• MongoDB Certified Developer | MongoDB University | 2021
+
+ACHIEVEMENTS & AWARDS
+
+• Winner, Google India Hackathon 2023 - Built AI-powered code review tool
+• "Outstanding Performance Award" at Amazon - Q4 2021
+• Smart India Hackathon 2018 - 2nd Place (Team of 6)
+• Published research paper: "Optimizing Microservices Communication" - IEEE Conference 2022
+
+ADDITIONAL INFORMATION
+
+Languages: English (Fluent), Hindi (Native)
+Interests: Open Source Contribution (500+ GitHub stars across 3 projects), Tech Blogging (10K+ Medium followers)
+Volunteer: Code for Good - Teaching programming to underprivileged students (2020-Present)

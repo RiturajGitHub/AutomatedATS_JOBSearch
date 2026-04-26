@@ -1,0 +1,71 @@
+John Doe
+Email: john.doe@email.com | Phone: +1-555-123-4567 | LinkedIn: linkedin.com/in/johndoe
+GitHub: github.com/johndoe
+
+PROFESSIONAL SUMMARY
+Results-driven Software Engineer with 5+ years of experience building scalable web applications using React, Node.js, and AWS. Proven track record of delivering 40%+ performance improvements and leading cross-functional teams of 8+ engineers.
+
+WORK EXPERIENCE
+
+Senior Software Engineer | Google | San Francisco, CA | Jan 2022 - Present
+• Led development of microservices architecture serving 1M+ daily active users, reducing API response time by 45%
+• Architected and implemented React-based analytics dashboard used by 500+ enterprise clients
+• Mentored team of 4 junior engineers, improving code quality by 60% through comprehensive PR reviews
+• Automated CI/CD pipeline using Jenkins and Docker, reducing deployment time from 2 hours to 15 minutes
+• Implemented real-time data processing system handling 100K+ events per second
+
+Software Engineer | Amazon | Seattle, WA | Jun 2019 - Dec 2021
+• Developed RESTful APIs handling 100K+ daily requests with 99.9% uptime SLA
+• Optimized MySQL database queries, improving overall database performance by 35%
+• Implemented Redis caching layer, reducing server load by 50% and improving response times
+• Built automated testing framework, increasing code coverage from 40% to 85%
+• Collaborated with product team to deliver 12+ features on schedule
+
+Junior Software Engineer | Microsoft | Redmond, WA | Jul 2017 - May 2019
+• Developed frontend components using React and TypeScript for Azure portal
+• Implemented responsive designs supporting 10+ device types and screen sizes
+• Fixed 50+ bugs and improved application stability by 30%
+• Participated in agile ceremonies and contributed to sprint planning
+
+EDUCATION
+
+Bachelor of Technology in Computer Science
+Massachusetts Institute of Technology (MIT) | Cambridge, MA | 2013 - 2017
+GPA: 3.8/4.0
+Relevant Coursework: Data Structures, Algorithms, Database Systems, Web Development
+
+TECHNICAL SKILLS
+
+Languages: JavaScript, TypeScript, Python, Java, SQL, HTML, CSS, Go
+Frontend: React, Vue.js, Angular, Redux, Next.js, Tailwind CSS, Material-UI
+Backend: Node.js, Express, Django, Flask, Spring Boot, GraphQL
+Cloud & DevOps: AWS (EC2, S3, Lambda, RDS), Docker, Kubernetes, Jenkins, GitHub Actions
+Databases: PostgreSQL, MongoDB, MySQL, Redis, DynamoDB
+Tools: Git, Jira, Postman, VS Code, Webpack, Babel
+
+PROJECTS
+
+E-Commerce Platform | React, Node.js, MongoDB, Stripe | github.com/johndoe/ecommerce
+• Built full-stack application with 2000+ active users generating $10K+ monthly revenue
+• Implemented secure payment processing using Stripe API with PCI compliance
+• Developed admin dashboard for inventory management and order tracking
+• Achieved 95+ Lighthouse performance score through optimization
+
+Real-Time Chat Application | Socket.io, React, Express, Redis | github.com/johndoe/chat-app
+• Created scalable chat application supporting 500+ concurrent users
+• Implemented WebSocket connections for real-time messaging with <100ms latency
+• Built message persistence layer using Redis for chat history
+• Deployed on AWS using Docker containers and load balancing
+
+CERTIFICATIONS
+
+• AWS Certified Solutions Architect - Associate | Amazon Web Services | 2023
+• Google Professional Cloud Architect | Google Cloud | 2022
+• Certified Kubernetes Administrator (CKA) | Cloud Native Computing Foundation | 2021
+
+ACHIEVEMENTS
+
+• Received "Outstanding Performance Award" at Google for Q3 2023
+• Published technical blog post on Medium with 10K+ views
+• Speaker at React Conference 2023 - "Building Scalable React Applications"
+• Open source contributor to React and Node.js projects (500+ GitHub stars)
