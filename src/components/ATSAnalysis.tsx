@@ -12,6 +12,7 @@ interface ATSAnalysisProps {
   onBack: () => void;
   onGoToJobs: () => void;
   onSkillsUpdate?: (selectedSkills: string[]) => void;
+  onSalaryUpdate?: (current: number, expected: { min: number; max: number }) => void;
 }
 
 // ─── Candidate Profile Panel ──────────────────────────────────────────────────
@@ -19,11 +20,45 @@ interface ATSAnalysisProps {
 const CandidateProfilePanel: React.FC<{ 
   profile: CandidateProfile;
   onSkillsUpdate?: (selectedSkills: string[]) => void;
-}> = ({ profile, onSkillsUpdate }) => {
+  onSalaryUpdate?: (current: number, expected: { min: number; max: number }) => void;
+}> = ({ profile, onSkillsUpdate, onSalaryUpdate }) => {
   const [open, setOpen] = useState(false);
   const [selectedSkills, setSelectedSkills] = useState<Set<string>>(
     new Set([...profile.primarySkills, ...profile.secondarySkills, ...profile.toolsAndInfra])
   );
+  
+  // Salary state
+  const [currentSalary, setCurrentSalary] = useState<number>(profile.salaryTarget || 20);
+  const [expectedSalaryRange, setExpectedSalaryRange] = useState<{ min: number; max: number }>(
+    { min: profile.salaryTarget || 20, max: (profile.salaryTarget || 20) + 5 }
+  );
+
+  // Generate salary options from 4L to 100L (1Cr) in 1L increments
+  const salaryOptions = Array.from({ length: 97 }, (_, i) => 4 + i);
+
+  // Generate expected salary ranges based on current salary
+  const getExpectedRanges = (current: number) => {
+    const ranges: { min: number; max: number; label: string }[] = [];
+    for (let min = current; min <= 100; min += 5) {
+      const max = Math.min(min + 5, 100);
+      ranges.push({ min, max, label: `₹${min}-${max}L` });
+      if (max >= 100) break;
+    }
+    return ranges;
+  };
+
+  const handleCurrentSalaryChange = (value: number) => {
+    setCurrentSalary(value);
+    // Auto-set expected to current+5
+    const newExpected = { min: value, max: Math.min(value + 5, 100) };
+    setExpectedSalaryRange(newExpected);
+    onSalaryUpdate?.(value, newExpected);
+  };
+
+  const handleExpectedSalaryChange = (min: number, max: number) => {
+    setExpectedSalaryRange({ min, max });
+    onSalaryUpdate?.(currentSalary, { min, max });
+  };
 
   const toggleSkill = (skill: string) => {
     const newSelected = new Set(selectedSkills);
@@ -183,19 +218,47 @@ const CandidateProfilePanel: React.FC<{
               </div>
             </div>
 
-            {/* Salary & Preferences */}
+            {/* Salary Selection */}
             <div>
               <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
-                <DollarSign className="w-3 h-3 text-green-400" /> Salary & Preferences
+                <DollarSign className="w-3 h-3 text-green-400" /> Salary (CTC in LPA)
               </p>
-              <div className="space-y-1 text-xs">
-                <p className="text-gray-300">
-                  Floor: <span className="text-white font-medium">₹{profile.salaryFloor}L</span> ·
-                  Target: <span className="text-white font-medium">₹{profile.salaryTarget}L</span> ·
-                  Stretch: <span className="text-white font-medium">₹{profile.salaryStretch}L</span>
-                </p>
-                <p className="text-gray-400">
-                  Company pref: <span className="text-white">{profile.companyPreference}</span> ·
+              <div className="space-y-2">
+                {/* Current Salary */}
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Current CTC</label>
+                  <select
+                    value={currentSalary}
+                    onChange={(e) => handleCurrentSalaryChange(Number(e.target.value))}
+                    className="w-full bg-gray-700 border border-gray-600 text-white text-xs rounded px-2 py-1.5 focus:outline-none focus:border-green-500 transition-colors"
+                  >
+                    {salaryOptions.map(sal => (
+                      <option key={sal} value={sal}>₹{sal}L</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Expected Salary */}
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Expected CTC</label>
+                  <select
+                    value={`${expectedSalaryRange.min}-${expectedSalaryRange.max}`}
+                    onChange={(e) => {
+                      const [min, max] = e.target.value.split('-').map(Number);
+                      handleExpectedSalaryChange(min, max);
+                    }}
+                    className="w-full bg-gray-700 border border-gray-600 text-white text-xs rounded px-2 py-1.5 focus:outline-none focus:border-green-500 transition-colors"
+                  >
+                    {getExpectedRanges(currentSalary).map(range => (
+                      <option key={`${range.min}-${range.max}`} value={`${range.min}-${range.max}`}>
+                        {range.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <p className="text-xs text-gray-500 mt-1">
+                  Pref: <span className="text-white">{profile.companyPreference}</span> ·
                   Remote: <span className="text-white">{String(profile.openToRemote)}</span>
                   {profile.noticePeriod ? ` · Notice: ${profile.noticePeriod}w` : ''}
                 </p>
@@ -461,7 +524,7 @@ const RecommendationCard: React.FC<{ rec: Recommendation; index: number }> = ({ 
   );
 };
 
-export const ATSAnalysis: React.FC<ATSAnalysisProps> = ({ result, fileName, onBack, onGoToJobs, onSkillsUpdate }) => {
+export const ATSAnalysis: React.FC<ATSAnalysisProps> = ({ result, fileName, onBack, onGoToJobs, onSkillsUpdate, onSalaryUpdate }) => {
   const getGradeInfo = (score: number) => {
     if (score >= 90) return { label: 'Excellent', desc: 'Your resume is highly ATS-optimized!', color: 'text-green-400' };
     if (score >= 80) return { label: 'Good', desc: 'Minor improvements can push you to 90+', color: 'text-blue-400' };
@@ -504,7 +567,11 @@ export const ATSAnalysis: React.FC<ATSAnalysisProps> = ({ result, fileName, onBa
         </div>
 
         {/* Candidate Profile Panel */}
-        <CandidateProfilePanel profile={result.candidateProfile} onSkillsUpdate={onSkillsUpdate} />
+        <CandidateProfilePanel 
+          profile={result.candidateProfile} 
+          onSkillsUpdate={onSkillsUpdate}
+          onSalaryUpdate={onSalaryUpdate}
+        />
 
         {/* Score Hero */}
         <div className="bg-gray-800/60 border border-gray-700 rounded-2xl p-6 mb-6">
