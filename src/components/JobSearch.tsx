@@ -460,8 +460,69 @@ const OptimisationTips: React.FC<{ tips: ResumeOptimisationTip[] }> = ({ tips })
 
 // ─── Candidate Profile Panel ──────────────────────────────────────────────────
 
-const CandidateProfilePanel: React.FC<{ profile: CandidateProfile }> = ({ profile }) => {
-  const [open, setOpen] = useState(false);
+const CandidateProfilePanel: React.FC<{ 
+  profile: CandidateProfile;
+  onSkillsUpdate?: (selectedSkills: string[]) => void;
+  onSalaryUpdate?: (current: number, expected: { min: number; max: number }) => void;
+}> = ({ profile, onSkillsUpdate, onSalaryUpdate }) => {
+  const [open, setOpen] = useState(true); // Open by default
+  const [selectedSkills, setSelectedSkills] = useState<Set<string>>(
+    new Set([...profile.primarySkills, ...profile.secondarySkills, ...profile.toolsAndInfra])
+  );
+  
+  // Salary state
+  const [currentSalary, setCurrentSalary] = useState<number>(profile.salaryTarget || 20);
+  const [expectedSalaryRange, setExpectedSalaryRange] = useState<{ min: number; max: number }>(
+    { min: profile.salaryTarget || 20, max: (profile.salaryTarget || 20) + 5 }
+  );
+
+  // Generate salary options from 4L to 100L (1Cr) in 1L increments
+  const salaryOptions = Array.from({ length: 97 }, (_, i) => 4 + i);
+
+  // Generate expected salary ranges based on current salary
+  const getExpectedRanges = (current: number) => {
+    const ranges: { min: number; max: number; label: string }[] = [];
+    for (let min = current; min <= 100; min += 5) {
+      const max = Math.min(min + 5, 100);
+      ranges.push({ min, max, label: `₹${min}-${max}L` });
+      if (max >= 100) break;
+    }
+    return ranges;
+  };
+
+  const handleCurrentSalaryChange = (value: number) => {
+    setCurrentSalary(value);
+    const newExpected = { min: value, max: Math.min(value + 5, 100) };
+    setExpectedSalaryRange(newExpected);
+    onSalaryUpdate?.(value, newExpected);
+  };
+
+  const handleExpectedSalaryChange = (min: number, max: number) => {
+    setExpectedSalaryRange({ min, max });
+    onSalaryUpdate?.(currentSalary, { min, max });
+  };
+
+  const toggleSkill = (skill: string) => {
+    const newSelected = new Set(selectedSkills);
+    if (newSelected.has(skill)) {
+      newSelected.delete(skill);
+    } else {
+      newSelected.add(skill);
+    }
+    setSelectedSkills(newSelected);
+    onSkillsUpdate?.(Array.from(newSelected));
+  };
+
+  const selectAll = () => {
+    const allSkills = [...profile.primarySkills, ...profile.secondarySkills, ...profile.toolsAndInfra];
+    setSelectedSkills(new Set(allSkills));
+    onSkillsUpdate?.(allSkills);
+  };
+
+  const deselectAll = () => {
+    setSelectedSkills(new Set());
+    onSkillsUpdate?.([]);
+  };
   return (
     <div className="bg-gray-800/60 border border-gray-700 rounded-2xl mb-6 overflow-hidden">
       <button
@@ -480,43 +541,162 @@ const CandidateProfilePanel: React.FC<{ profile: CandidateProfile }> = ({ profil
         {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
       </button>
       {open && (
-        <div className="px-4 pb-4 border-t border-gray-700 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Primary Skills</p>
-            <div className="flex flex-wrap gap-1">
-              {profile.primarySkills.map((s, i) => (
-                <span key={i} className="text-xs bg-violet-500/20 text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded-full">{s}</span>
-              ))}
+        <div className="px-4 pb-4 border-t border-gray-700 pt-4 space-y-4">
+          {/* Skill Selection Controls */}
+          <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl p-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm text-violet-300 font-semibold">
+                🎯 Select Skills for Job Matching ({selectedSkills.size} selected)
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={selectAll}
+                  className="text-xs bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 px-2 py-1 rounded transition-colors"
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={deselectAll}
+                  className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
             </div>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Secondary Skills</p>
-            <div className="flex flex-wrap gap-1">
-              {profile.secondarySkills.slice(0, 8).map((s, i) => (
-                <span key={i} className="text-xs bg-gray-700/60 text-gray-300 border border-gray-600 px-2 py-0.5 rounded-full">{s}</span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Domain Expertise</p>
-            <div className="flex flex-wrap gap-1">
-              {profile.domainExpertise.map((d, i) => (
-                <span key={i} className="text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full">{d}</span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Salary Range (LPA)</p>
-            <p className="text-white text-xs">
-              Floor: ₹{profile.salaryFloor}L · Target: ₹{profile.salaryTarget}L · Stretch: ₹{profile.salaryStretch}L
-            </p>
-            <p className="text-gray-400 text-xs mt-1">
-              Pref: {profile.companyPreference} · Remote: {String(profile.openToRemote)}
+            <p className="text-xs text-violet-300/70">
+              Click skills to include/exclude from job matching. Selected skills will be used to calculate match scores.
             </p>
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Primary Skills */}
+            <div>
+              <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                <Zap className="w-3 h-3 text-violet-400" /> Primary Skills
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {profile.primarySkills.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => toggleSkill(s)}
+                    className={`text-xs px-2 py-0.5 rounded-full transition-all cursor-pointer ${
+                      selectedSkills.has(s)
+                        ? 'bg-violet-500/30 text-violet-200 border-2 border-violet-400'
+                        : 'bg-gray-700 text-gray-400 border border-gray-600 opacity-50'
+                    }`}
+                  >
+                    {selectedSkills.has(s) ? '✓ ' : ''}{s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Secondary Skills */}
+            <div>
+              <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                <Star className="w-3 h-3 text-blue-400" /> Secondary Skills
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {profile.secondarySkills.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => toggleSkill(s)}
+                    className={`text-xs px-2 py-0.5 rounded-full transition-all cursor-pointer ${
+                      selectedSkills.has(s)
+                        ? 'bg-blue-500/30 text-blue-200 border-2 border-blue-400'
+                        : 'bg-gray-700 text-gray-400 border border-gray-600 opacity-50'
+                    }`}
+                  >
+                    {selectedSkills.has(s) ? '✓ ' : ''}{s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tools & Infra */}
+            <div>
+              <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                <Target className="w-3 h-3 text-green-400" /> Tools & Infrastructure
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {profile.toolsAndInfra.map((t, i) => (
+                  <button
+                    key={i}
+                    onClick={() => toggleSkill(t)}
+                    className={`text-xs px-2 py-0.5 rounded-full transition-all cursor-pointer ${
+                      selectedSkills.has(t)
+                        ? 'bg-green-500/30 text-green-200 border-2 border-green-400'
+                        : 'bg-gray-700 text-gray-400 border border-gray-600 opacity-50'
+                    }`}
+                  >
+                    {selectedSkills.has(t) ? '✓ ' : ''}{t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Domain Expertise */}
+            <div>
+              <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                <Briefcase className="w-3 h-3 text-amber-400" /> Domain Expertise
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {profile.domainExpertise.map((d, i) => (
+                  <span key={i} className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full">{d}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Salary Selection */}
+            <div>
+              <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                <DollarSign className="w-3 h-3 text-green-400" /> Salary (CTC in LPA)
+              </p>
+              <div className="space-y-2">
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Current CTC</label>
+                  <select
+                    value={currentSalary}
+                    onChange={(e) => handleCurrentSalaryChange(Number(e.target.value))}
+                    className="w-full bg-gray-700 border border-gray-600 text-white text-xs rounded px-2 py-1.5 focus:outline-none focus:border-green-500 transition-colors"
+                  >
+                    {salaryOptions.map(sal => (
+                      <option key={sal} value={sal}>₹{sal}L</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Expected CTC</label>
+                  <select
+                    value={`${expectedSalaryRange.min}-${expectedSalaryRange.max}`}
+                    onChange={(e) => {
+                      const [min, max] = e.target.value.split('-').map(Number);
+                      handleExpectedSalaryChange(min, max);
+                    }}
+                    className="w-full bg-gray-700 border border-gray-600 text-white text-xs rounded px-2 py-1.5 focus:outline-none focus:border-green-500 transition-colors"
+                  >
+                    {getExpectedRanges(currentSalary).map(range => (
+                      <option key={`${range.min}-${range.max}`} value={`${range.min}-${range.max}`}>
+                        {range.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Pref: <span className="text-white">{profile.companyPreference}</span> ·
+                  Remote: <span className="text-white">{String(profile.openToRemote)}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
           {profile.quantifiedAchievements.length > 0 && (
-            <div className="sm:col-span-2">
-              <p className="text-xs text-gray-500 mb-1">Key Achievements (used in application tips)</p>
+            <div>
+              <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                <TrendingUp className="w-3 h-3 text-green-400" /> Key Achievements
+              </p>
               <ul className="space-y-1">
                 {profile.quantifiedAchievements.slice(0, 3).map((a, i) => (
                   <li key={i} className="text-xs text-gray-300 flex items-start gap-1">

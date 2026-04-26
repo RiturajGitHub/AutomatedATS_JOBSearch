@@ -22,7 +22,7 @@ const CandidateProfilePanel: React.FC<{
   onSkillsUpdate?: (selectedSkills: string[]) => void;
   onSalaryUpdate?: (current: number, expected: { min: number; max: number }) => void;
 }> = ({ profile, onSkillsUpdate, onSalaryUpdate }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true); // Open by default
   const [selectedSkills, setSelectedSkills] = useState<Set<string>>(
     new Set([...profile.primarySkills, ...profile.secondarySkills, ...profile.toolsAndInfra])
   );
